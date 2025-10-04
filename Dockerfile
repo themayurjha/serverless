@@ -1,6 +1,6 @@
 # Build argument for base image selection
 # ARG BASE_IMAGE=nvidia/cuda:12.6.3-cudnn-runtime-ubuntu24.04
-ARG BASE_IMAGE=runpod/worker-comfyui:latest-flux1-dev
+ARG BASE_IMAGE=runpod/worker-comfyui:latest
 # Stage 1: Base image with common dependencies
 FROM ${BASE_IMAGE} AS base
 
