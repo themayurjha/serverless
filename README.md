@@ -1,3 +1,5 @@
+[![Runpod](https://api.runpod.io/badge/themayurjha/serverless)](https://console.runpod.io/hub/themayurjha/serverless)
+
 # worker-comfyui
 
 > [ComfyUI](https://github.com/comfyanonymous/ComfyUI) as a serverless API on [RunPod](https://www.runpod.io/)
