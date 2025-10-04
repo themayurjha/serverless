@@ -148,44 +148,27 @@ ARG MODEL_TYPE=flux1-dev
 WORKDIR /comfyui
 
 # Create necessary directories upfront
-RUN mkdir -p models/checkpoints models/vae models/unet models/clip models/loras
+RUN mkdir -p models/checkpoints models/vae models/unet models/clip models/loras models/diffusion_models
 
 # Download checkpoints/vae/unet/clip models to include in image based on model type
-RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
-      wget -q -O models/checkpoints/sd_xl_base_1.0.safetensors https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors && \
-      wget -q -O models/vae/sdxl_vae.safetensors https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors && \
-      wget -q -O models/vae/sdxl-vae-fp16-fix.safetensors https://huggingface.co/madebyollin/sdxl-vae-fp16-fix/resolve/main/sdxl_vae.safetensors; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "sd3" ]; then \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors https://huggingface.co/stabilityai/stable-diffusion-3-medium/resolve/main/sd3_medium_incl_clips_t5xxlfp8.safetensors; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "flux1-schnell" ]; then \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-schnell.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors && \
-      wget -q -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
-      wget -q -O models/clip/t5xxl_fp8_e4m3fn.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors && \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "flux1-dev" ]; then \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-dev.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors && \
-      wget -q -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
-      wget -q -O models/clip/t5xxl_f16.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_f16.safetensors && \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "flux1-dev-fp8" ]; then \
-      wget -q -O models/checkpoints/flux1-dev-fp8.safetensors https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors; \
-    fi
+RUN --mount=type=secret,id=HF_TOKEN \
+    bash -lc 'set -euo pipefail; \
+    HF_TOKEN="$(cat /run/secrets/HF_TOKEN)"; \
+    wget --header="Authorization: Bearer ${HF_TOKEN}" -O models/diffusion_models/flux1-dev.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors && \
+    wget --header="Authorization: Bearer ${HF_TOKEN}" -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors'
+RUN wget -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors 
+RUN wget -O models/clip/t5xxl_f16.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_f16.safetensors 
 
 
-# Download some lora models from CivitAI as well
-RUN wget -q --content-disposition https://civitai.com/api/download/models/1092656?token="${CIVITAI_ACCESS_TOKEN}" -O models/loras/flux_pussy_spread.safetensors
-RUN wget -q --content-disposition https://civitai.com/api/download/models/1176213?token="${CIVITAI_ACCESS_TOKEN}" -O models/loras/flux_dildo_riding.safetensors
-RUN wget -q --content-disposition https://civitai.com/api/download/models/1539734?token="${CIVITAI_ACCESS_TOKEN}" -O models/loras/flux_dildo_insertion.safetensors
-RUN wget -q --content-disposition https://civitai.com/api/download/models/928767?token="${CIVITAI_ACCESS_TOKEN}" -O models/loras/flux_fingering.safetensors
-
+RUN --mount=type=secret,id=CIVITAI_TOKEN \
+    bash -lc 'set -euo pipefail; \
+    CIVITAI_TOKEN="$(cat /run/secrets/CIVITAI_TOKEN)"; \
+RUN wget --content-disposition https://civitai.com/api/download/models/1092656?token=${CIVITAI_TOKEN} -O models/loras/flux_pussy_spread.safetensors && \
+RUN wget --content-disposition https://civitai.com/api/download/models/1176213?token=${CIVITAI_TOKEN} -O models/loras/flux_dildo_riding.safetensors && \
+RUN wget --content-disposition https://civitai.com/api/download/models/1539734?token=${CIVITAI_TOKEN} -O models/loras/flux_dildo_insertion.safetensors && \
+RUN wget --content-disposition https://civitai.com/api/download/models/928767?token=${CIVITAI_TOKEN} -O models/loras/flux_fingering.safetensors && \
+RUN wget --content-disposition https://civitai.com/api/download/models/746602?token=${CIVITAI_TOKEN} -O models/loras/flux_nsfw.safetensors && \
+RUN wget --content-disposition https://civitai.com/api/download/models/804967?token=${CIVITAI_TOKEN} -O models/loras/flux_hands.safetensors'
 
 # Stage 3: Final image
 FROM base AS final
